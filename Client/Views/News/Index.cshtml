@@ -1,0 +1,137 @@
+﻿@using Client.Responses
+@using Client.Requests
+@model NewsPagingRequest;
+@{
+    int totalRecord = (int)Model.TotalRecord;
+    int totalPages = (int)Model.TotalPages;
+    int currentPage = Model.CurrentPage;
+    int pageSize = Model.PageSize;
+
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+
+    int startIndex = ((currentPage - 1) * pageSize) + 1;
+    int endIndex = startIndex + pageSize - 1;
+    if (endIndex > totalRecord) endIndex = totalRecord;
+
+    int index = 1;
+    var categories = ViewBag?.Categories;
+    var tags = ViewBag?.Tags;
+}
+
+<section id="recent-blog-posts" class="recent-blog-posts min-vh-100">
+
+    <div class="container" data-aos="fade-up">
+
+        <div class="section-header">
+            <h2 class="mb-2">All News Articles</h2>
+            <span class="small-title">
+               View all news
+            </span>
+
+            <div class="filter">
+                <form id="form-search" method="get" asp-controller="News" asp-action="Index">
+                    <div class="row mb-3 d-flex align-items-end">
+                        <div class="col-sm-6 col-md-6 col-lg-3 mb-sm-3 mb-md-3 mb-lg-0">
+                            <label for="inputText" class="">Category</label>
+                            <select onchange="submitForm('form-search')" class="form-control selectpicker show-tick" aria-label="Default select example" asp-for="@Model.CategoryId">
+                                @if (categories != null)
+                                {
+                                    <option value="-1" selected="@(!(Model.CategoryId > 0) ? "selected" : null)">All</option>
+                                    @foreach (var item in categories)
+                                    {
+                                        <option value="@item.CategoryId" selected="@((Model.CategoryId == item.CategoryId) ? "selected" : null)">@item.CategoryName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-9">
+                            <label class="col-sm-12">Search news</label>
+                            <div class="input-group">
+                                <input type="text" asp-for="SearchTerm" class="form-control rounded-0 rounded-start" id="search-term" placeholder="Enter news title, content" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary rounded-0 rounded-end">
+                                        <span><i class="bi bi-search"></i> Search</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <input id="current-page" type="hidden" asp-for="CurrentPage" name="CurrentPage" />
+
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (Model?.Items != null && Model.Items.Count > 0)
+        {
+
+            <div class="row">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="col-lg-3 col-md-6 col-sm-12 mb-3 position-relative">
+                        <div class="post-box">
+                            <div class="post-img">
+                                <img src="/assets/images/news/news-@(index++).png" class="img-fluid" alt="" />
+                            </div>
+                            <div class="d-flex align-items-center meta">
+                                <img class="img-fluid rounded-circle post-avatar mx-1" src="/assets/images/user-default-avatar.png" alt="ic-pdp" />
+                                <div class="d-flex flex-column">
+                                    <span class="post-author">@item.CreatedBy</span>
+                                    <p class="m-0 post-date"><i class="bi bi-calendar-check-fill"></i> : @item.CreatedDate?.ToString("dd/MM/yyyy")</p>
+                                </div>
+                            </div>
+                            <div class="meta">
+                                <span class="post-category">Category: @item.Category</span>
+                            </div>
+                            <h3 class="post-title py-1">@item.NewsTitle</h3>
+                            <p class="post-description">@item.NewsContent</p>
+                            <a asp-controller="News" asp-action="Details" asp-route-id="@item.NewsArticleId" target="_blank" class="readmore stretched-link"><span>Read more</span><i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                }
+            </div>
+
+            <div class="row d-flex justify-content-center align-content-center my-4">
+                <div class="col">
+                    <span class="fst-italic ">Show <strong>@startIndex - @endIndex</strong> in total of <strong> @totalRecord</strong> news</span>
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <ul class="pagination justify-content-end col">
+                        <li class="page-item @((currentPage == 1) ? "disabled" : "")">
+                            <a onclick="event.preventDefault(); setCurrentPage('@(currentPage-1)')" href="#" class="page-link link-paging" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+
+                        @if (currentPage > 3)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+
+                        @for (int pageIndex = startPage; pageIndex <= endPage; pageIndex++)
+                        {
+                            <li class="page-item @(pageIndex == currentPage ? "link-active" : "")">
+                                <a onclick="event.preventDefault(); setCurrentPage('@pageIndex')" class="page-link link-paging" href="#">@pageIndex</a>
+                            </li>
+                        }
+
+                        @if (currentPage < Math.Ceiling(totalRecord / 10.0) - 2)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+
+                        <li class="page-item @((currentPage == totalPages) ? "disabled" : "")">
+                            <a onclick="event.preventDefault(); setCurrentPage('@(currentPage + 1)')" class="page-link link-paging" href="#">Next</a>
+                        </li>
+                    </ul>
+                }
+            </div>
+        }
+        else
+        {
+            <h6 class="fw-bold">Not found any news.</h6>
+        }
+    </div>
+</section>

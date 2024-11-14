@@ -1,0 +1,307 @@
+﻿@using Client.Requests
+@using Api.Responses
+@using Client.Helpers
+@using Client.Constants
+@model PagingRequest<AccountResponse>
+@{
+    int totalRecord = (int)Model.TotalRecord;
+    int totalPages = (int)Model.TotalPages;
+    int currentPage = Model.CurrentPage;
+    int pageSize = Model.PageSize;
+
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+
+    int startIndex = ((currentPage - 1) * pageSize) + 1;
+    int endIndex = startIndex + pageSize - 1;
+    if (endIndex > totalRecord) endIndex = totalRecord;
+
+    int ordinalNumber = 1;
+}
+
+<div class="pagetitle">
+    <h1>Manage staff</h1>
+</div><!-- End Page Title -->
+
+<div class="card p-3">
+    <div class="row mb-2">
+        <form id="form-search" method="GET" asp-area="Admin" asp-controller="Account" asp-action="Index">
+            <input name="IsSearch" type="hidden" value="true">
+            <div class="row">
+                <div class=" col-sm-12 col-lg-8 pe-lg-0">
+                    <div class="input-group">
+                        <input asp-for="@Model.SearchTerm" name="SearchTerm" type="text" class="form-control rounded-0 rounded-start"
+                               id="search-term" placeholder="Enter email, name of account">
+                        <button type="submit" class="btn btn-info rounded-0 rounded-end">
+                            <span><i class="bi bi-search"></i> Search</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-lg-4 pt-2 pt-lg-0 text-lg-end">
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modal-create" class="btn btn-primary">
+                        <span><i class="bi bi-plus-circle-fill me-1"></i>Create</span>
+                    </button>
+                </div>
+            </div>
+            <input id="current-page" type="hidden" asp-for="CurrentPage" name="CurrentPage" />
+        </form>
+    </div>
+    @if (Model?.Items?.Count > 0)
+    {
+        <div class="table-container">
+            <table class="useful-table">
+                <thead>
+                    <tr>
+                        <th class="col-px-10">STT</th>
+                        <th>Email</th>
+                        <th>Fullname</th>
+                        <th class="col-2">Role</th>
+                        <th class="text-center col-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="useful-table-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@(ordinalNumber++)</td>
+
+                            <td title="@item.AccountEmail" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.AccountEmail
+                            </td>
+                            <td title="@item.AccountName" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.AccountName
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-success">Staff</span>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="fillDataToFormUpdate(@(item.AccountId.ToString()))" data-bs-toggle="modal" data-bs-target="#modal-update" class="btn btn-secondary me-2"><i class="bi bi-pencil"></i></button>
+                                <button onclick="fillDataToFormDelete(@(item.AccountId.ToString()))" data-bs-toggle="modal" data-bs-target="#modal-confirm" class="btn btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+        <div class="row d-flex justify-content-center align-content-center mt-3">
+
+            <div class="col">
+                <span class="fst-italic ">Show <strong>@startIndex - @endIndex</strong> in total of <strong> @totalRecord</strong> staff</span>
+            </div>
+            @if (totalPages > 1)
+            {
+                <ul class="pagination justify-content-end col">
+                    <li class="page-item @((currentPage == 1) ? "disabled" : "")">
+                        <a onclick="event.preventDefault(); setCurrentPage('@(currentPage-1)')" href="#" class="page-link link-paging" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+
+                    @if (currentPage > 3)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    @for (int pageIndex = startPage; pageIndex <= endPage; pageIndex++)
+                    {
+                        <li class="page-item @(pageIndex == currentPage ? "link-active" : "")">
+                            <a onclick="event.preventDefault(); setCurrentPage('@pageIndex')" class="page-link link-paging" href="#">@pageIndex</a>
+                        </li>
+                    }
+
+                    @if (currentPage < Math.Ceiling(totalRecord / 10.0) - 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    <li class="page-item @((currentPage == totalPages) ? "disabled" : "")">
+                        <a onclick="event.preventDefault(); setCurrentPage('@(currentPage + 1)')" class="page-link link-paging" href="#">Next</a>
+                    </li>
+                </ul>
+            }
+        </div>
+    }
+    else
+    {
+        <h6 class="fw-bold">Data not found.</h6>
+    }
+
+</div>
+<form id="form-create" method="POST" asp-area="Admin" asp-controller="Account" asp-action="Create" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-create" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add new account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2">
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Email<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="email-create" name="AccountEmail" type="text" class="form-control" placeholder="Enter account email">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12">
+                            <label class="col-sm-12 fw-bold">Name<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="name-create" name="AccountName" type="text" class="form-control" placeholder="Enter account name">
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+                    <button type="button" onclick="createAccount()" class="btn btn-secondary" >
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<form id="form-update" method="POST" asp-area="Admin" asp-controller="Account" asp-action="Update" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-update" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2">
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Email<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="id-update" name="AccountId" type="hidden">
+                                <input id="email-update" readonly name="AccountEmail" type="text" class="form-control" placeholder="Enter account email">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12">
+                            <label class="col-sm-12 fw-bold">Name<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="name-update" name="AccountName" type="text" class="form-control" placeholder="Enter account name">
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+                    <button type="button" onclick="updateAccount()" class="btn btn-secondary">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<form id="form-delete" method="POST" asp-area="Admin" asp-controller="Account" asp-action="Delete" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-confirm" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title color-red">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <span class="fw-bold fs-5">Are you sure you want to delete the account:</span>
+                        <span class=" fs-6" id="email-delete"></span> ?
+                    </div>
+                    <input type="hidden" id="id-delete" name="id" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>No</span>
+                    </button>
+                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Yes</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<script>
+
+    const formCreate = document.getElementById('form-create');
+    const formUpdate = document.getElementById('form-update');
+    const formDelete = document.getElementById('form-delete');
+
+    function createAccount() {
+        var email = document.getElementById("email-create");
+        var name = document.getElementById("name-create");
+
+        if (email.value === null || email.value.trim() === "") {
+            showToast("warning", "Please enter account email.");
+            return;
+        }
+
+        if (name.value === null || name.value.trim() === "") {
+            showToast("warning", "Please enter account name.");
+            return;
+        }
+
+        formCreate.submit();
+    }
+
+    function fillDataToFormUpdate(id) {
+        var hiddenId = document.getElementById("id-update");
+        var email = document.getElementById("email-update");
+        var name = document.getElementById("name-update");
+        var url = "GetAccountById?id=" + id;
+        const response = fetch(url)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                email.value = result.accountEmail;
+                name.value = result.accountName;
+                hiddenId.value = result.accountId;
+            }).catch(error => {
+                showToast("error", error);
+            });
+    }
+
+    function fillDataToFormDelete(id) {
+        var hiddenId = document.getElementById("id-delete");
+        var email = document.getElementById("email-delete");
+        var url = "GetAccountById?id=" + id;
+        const response = fetch(url)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                email.innerHTML = result.accountEmail;
+                hiddenId.value = result.accountId;
+            }).catch(error => {
+                showToast("error", error);
+            });
+    }
+
+    function updateAccount() {
+        var name = document.getElementById("name-update");
+
+        if (name.value === null || name.value.trim() === "") {
+            showToast("warning", "Please enter account name.");
+            return;
+        }
+
+        formUpdate.submit();
+    }
+</script>

@@ -1,0 +1,308 @@
+﻿@using Client.Requests
+@using Api.Responses
+@using Client.Helpers
+@using Client.Constants
+@model PagingRequest<CategoryResponse>
+@{
+    int totalRecord = (int)Model.TotalRecord;
+    int totalPages = (int)Model.TotalPages;
+    int currentPage = Model.CurrentPage;
+    int pageSize = Model.PageSize;
+
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+
+    int startIndex = ((currentPage - 1) * pageSize) + 1;
+    int endIndex = startIndex + pageSize - 1;
+    if (endIndex > totalRecord) endIndex = totalRecord;
+
+    int ordinalNumber = 1;
+}
+
+<div class="pagetitle">
+    <h1>Manage category</h1>
+</div><!-- End Page Title -->
+
+<div class="card p-3">
+    <div class="row mb-2">
+        <form id="form-search" method="GET" asp-area="Staff" asp-controller="Category" asp-action="Index">
+            <input name="IsSearch" type="hidden" value="true">
+            <div class="row">
+                <div class=" col-sm-12 col-lg-8 pe-lg-0">
+                    <div class="input-group">
+                        <input asp-for="@Model.SearchTerm" name="SearchTerm" type="text" class="form-control rounded-0 rounded-start"
+                               id="search-term" placeholder="Enter category name">
+                        <button type="submit" class="btn btn-info rounded-0 rounded-end">
+                            <span><i class="bi bi-search"></i> Search</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-lg-4 pt-2 pt-lg-0 text-lg-end">
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modal-create" class="btn btn-primary">
+                        <span><i class="bi bi-plus-circle-fill me-1"></i>Create</span>
+                    </button>
+                </div>
+            </div>
+            <input id="current-page" type="hidden" asp-for="CurrentPage" name="CurrentPage" />
+        </form>
+    </div>
+    @if (Model?.Items?.Count > 0)
+    {
+        <div class="table-container">
+            <table class="useful-table">
+                <thead>
+                    <tr>
+                        <th class="col-px-10">STT</th>
+                        <th>Name</th>
+                        <th>Desciption</th>
+                        <th class="text-center col-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="useful-table-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@(ordinalNumber++)</td>
+
+                            <td title="@item.CategoryName" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.CategoryName
+                            </td>
+                            <td title="@item.CategoryDesciption" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.CategoryDesciption
+                            </td>
+                            <td class="text-center">
+                                <button onclick="fillDataToFormUpdate(@(item.CategoryId.ToString()))" data-bs-toggle="modal" data-bs-target="#modal-update" class="btn btn-secondary me-2"><i class="bi bi-pencil"></i></button>
+                                <button onclick="fillDataToFormDelete(@(item.CategoryId.ToString()))" data-bs-toggle="modal" data-bs-target="#modal-confirm" class="btn btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+        <div class="row d-flex justify-content-center align-content-center mt-3">
+
+            <div class="col">
+                <span class="fst-italic ">Show <strong>@startIndex - @endIndex</strong> in total of <strong> @totalRecord</strong> categories</span>
+            </div>
+            @if (totalPages > 1)
+            {
+                <ul class="pagination justify-content-end col">
+                    <li class="page-item @((currentPage == 1) ? "disabled" : "")">
+                        <a onclick="event.preventDefault(); setCurrentPage('@(currentPage-1)')" href="#" class="page-link link-paging" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+
+                    @if (currentPage > 3)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    @for (int pageIndex = startPage; pageIndex <= endPage; pageIndex++)
+                    {
+                        <li class="page-item @(pageIndex == currentPage ? "link-active" : "")">
+                            <a onclick="event.preventDefault(); setCurrentPage('@pageIndex')" class="page-link link-paging" href="#">@pageIndex</a>
+                        </li>
+                    }
+
+                    @if (currentPage < Math.Ceiling(totalRecord / 10.0) - 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    <li class="page-item @((currentPage == totalPages) ? "disabled" : "")">
+                        <a onclick="event.preventDefault(); setCurrentPage('@(currentPage + 1)')" class="page-link link-paging" href="#">Next</a>
+                    </li>
+                </ul>
+            }
+        </div>
+    }
+    else
+    {
+        <h6 class="fw-bold">Data not found.</h6>
+    }
+
+</div>
+<form id="form-create" method="POST" asp-area="Staff" asp-controller="Category" asp-action="Create" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-create" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add new category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2">
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Category Name<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="name-create" name="CategoryName" type="text" class="form-control" placeholder="Enter category name">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12">
+                            <label class="col-sm-12 fw-bold">Category Description<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <textarea id="description-create" name="CategoryDesciption" type="text" class="form-control" placeholder="Enter category description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+                    <button type="button" onclick="createCategory()" class="btn btn-secondary">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<form id="form-update" method="POST" asp-area="Staff" asp-controller="Category" asp-action="Update" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-update" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2">
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Category Name<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="id-update" name="CategoryId" type="hidden">
+                                <input id="name-update" name="CategoryName" type="text" class="form-control" placeholder="Enter category name">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12">
+                            <label class="col-sm-12 fw-bold">Category Description<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <textarea id="description-update" name="CategoryDesciption" type="text" class="form-control" placeholder="Enter category description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+                    <button type="button" onclick="updateCategory()" class="btn btn-secondary">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<form id="form-delete" method="POST" asp-area="Staff" asp-controller="Category" asp-action="Delete" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-confirm" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title color-red">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <span class="fw-bold fs-5">Are you sure you want to delete the category:</span>
+                        <span class=" fs-6" id="category-delete"></span> ?
+                    </div>
+                    <input type="hidden" id="id-delete" name="id" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>No</span>
+                    </button>
+                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Yes</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<script>
+
+    const formCreate = document.getElementById('form-create');
+    const formUpdate = document.getElementById('form-update');
+    const formDelete = document.getElementById('form-delete');
+
+    function createCategory() {
+        var name = document.getElementById("name-create");
+        var description = document.getElementById("description-create");
+
+        if (description.value === null || description.value.trim() === "") {
+            showToast("warning", "Please enter category description.");
+            return;
+        }
+
+        if (name.value === null || name.value.trim() === "") {
+            showToast("warning", "Please enter category name.");
+            return;
+        }
+
+        formCreate.submit();
+    }
+
+    function fillDataToFormUpdate(id) {
+        var hiddenId = document.getElementById("id-update");
+        var description = document.getElementById("description-update");
+        var name = document.getElementById("name-update");
+        var url = "GetCategoryById?id=" + id;
+        const response = fetch(url)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                description.value = result.categoryDesciption;
+                name.value = result.categoryName;
+                hiddenId.value = result.categoryId;
+            }).catch(error => {
+                showToast("error", error);
+            });
+    }
+
+    function fillDataToFormDelete(id) {
+        var hiddenId = document.getElementById("id-delete");
+        var name = document.getElementById("category-delete");
+        var url = "GetCategoryById?id=" + id;
+        const response = fetch(url)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                name.innerHTML = result.categoryName;
+                hiddenId.value = result.categoryId;
+            }).catch(error => {
+                showToast("error", error);
+            });
+    }
+
+    function updateCategory() {
+        var name = document.getElementById("name-update");
+        var description = document.getElementById("description-update");
+
+        if (name.value === null || name.value.trim() === "") {
+            showToast("warning", "Please enter category name.");
+            return;
+        }
+        if (description.value === null || description.value.trim() === "") {
+            showToast("warning", "Please enter category description.");
+            return;
+        }
+
+        formUpdate.submit();
+    }
+</script>

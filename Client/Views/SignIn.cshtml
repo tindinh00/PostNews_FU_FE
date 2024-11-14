@@ -1,0 +1,39 @@
+﻿@using Client.Helpers
+@using Client.Requests
+@model LoginRequest
+
+<div class="bg-clubs">
+    <section class="register min-vh-100 d-flex flex-column align-items-center justify-content-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+
+                    <div class="d-flex justify-content-center py-4">
+                        <a asp-controller="Home" asp-action="Index" class=" d-flex align-items-center ">
+                            <img class="logo-bigger" src="/assets/images/fpt-education-logo.png" alt="">
+                        </a>
+                    </div><!-- End Logo -->
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="pt-2 pb-2">
+                                <h5 class="card-title text-center pb-0 fs-4">Sign In</h5>
+                                <p class="text-center small">Start your journey to discover interesting news in FPT Education!</p>
+                            </div>
+
+                            <form method="post" asp-controller="Authen" asp-action="SignIn" class="row g-3 needs-validation">
+                                <input type="text" asp-for="Email" placeholder="Enter your email" class="form-control" />
+                                <input type="password" asp-for="Password" placeholder="Enter your password" class="form-control" />
+
+                                <button id="btn-google_login" class="btn btn-primary bg-orange text-white w-100" type="submit">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Sign In</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

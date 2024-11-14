@@ -1,0 +1,62 @@
+﻿@using Api.Responses
+@model AccountResponse
+
+@{
+}
+
+<div class="pagetitle">
+    <h1>Update your profile</h1>
+</div><!-- End Page Title -->
+
+@if(Model != null)
+{
+    <div class=" mb-3">
+        <div class="row profile">
+            <div id="toggle-sidebar-target" class="col-sm-12 col-md-6 col-lg-6 m-auto">
+                <div class="card p-3 profile-card">
+                    <form asp-area="Staff" asp-controller="Profile" asp-action="Update" method="post" enctype="multipart/form-data">
+                        <div class="row mb-2">
+                            <label class="col-sm-12">Email<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input asp-for="AccountId" type="hidden">
+                                <input asp-for="AccountEmail" type="hidden">
+                                <input disabled asp-for="AccountEmail" type="text" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-12">Name<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+
+                                <input asp-for="AccountName" type="text" class="form-control" placeholder="Enter your name">
+                                <span asp-validation-for="AccountName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary me-2">
+                                    <i class="bi bi-arrow-left me-1"></i>
+                                    <span>Home</span>
+                                </a>
+                                <button id="btn-submit" onclick="showSpinner();" type="submit" class="btn btn-primary">
+                                    <span id="spinner" class="visually-hidden">
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Loading...</span>
+                                        <span>Processing</span>
+                                    </span>
+                                    <span id="btn-content">
+                                        <i class="bi bi-floppy"></i>
+                                        <span>Save</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+} else
+{
+    <div>Not found your profile.</div>
+}

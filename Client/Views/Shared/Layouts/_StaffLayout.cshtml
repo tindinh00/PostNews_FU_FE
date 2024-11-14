@@ -1,0 +1,174 @@
+﻿@using Client.Services
+@using Client.Helpers
+@using Client.Models
+@{
+    var userInfo = SessionHelper.GetObject<UserInfo>(Context.Session, "UserInfo");
+
+    var currentController = ViewContext.RouteData.Values["controller"] as string;
+    var currentAction = ViewContext.RouteData.Values["action"] as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@currentController | CMCS</title>
+    <link rel="icon" href="~/icon.png" type="image/x-icon" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/lib/bootstrap-select/css/bootstrap-select.min.css" />
+
+    <link rel="stylesheet" href="~/css/shared.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/variables.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/bootstrap-select/js/bootstrap-select.min.js"></script>
+  
+</head>
+<body>
+    <header id="header" class="header fixed-top d-flex align-items-center">
+
+        <div class="d-flex align-items-center justify-content-between">
+            <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center ">
+                <img src="/assets/images/fpt-education-logo.png" alt="">
+            </a>
+        </div><!-- End Logo -->
+        <nav class="header-nav-on-phone ms-auto mx-3">
+
+            <a class="nav-profile" href="#" data-bs-toggle="dropdown">
+                <div class="center">
+                    <div class="avatar">
+                        <img src="/assets/images/user-default-avatar.png" alt="Profile" class="rounded-circle">
+                    </div>
+                    <span class="fs-6 ms-1">@userInfo.AccountName</span>
+
+                </div>
+            </a><!-- End Profile Iamge Icon -->
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                <li class="dropdown-header">
+                    <h6>@userInfo.AccountName</h6>
+                    <span>Staff</span>
+                </li>
+
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+
+                <li>
+                    <a asp-area="Staff" asp-controller="Profile" asp-action="Update" class="dropdown-item d-flex align-items-center  @(currentController == "Profile" ? "active" : "")">
+                        <i class="bi bi-person"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+
+                <li>
+                    <a asp-controller="Authen" asp-action="SignOut" class="dropdown-item d-flex align-items-center">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Sign out</span>
+                    </a>
+                </li>
+
+            </ul><!-- End Profile Dropdown Items -->
+        </nav><!-- End Icons Navigation -->
+    </header><!-- End Header -->
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+        <ul class="sidebar-nav" id="sidebar-nav">
+
+            <li class="nav-item">
+                <a asp-area="Staff" asp-controller="Home" asp-action="Index" class="nav-link @(currentController == "Home" && currentAction == "Index" ? "" : "collapsed")">
+                    <i class="bi bi-house-door"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li><!-- End Home Nav -->
+
+
+            <li class="nav-item">
+                <a asp-area="Staff" asp-controller="News" asp-action="Index" class="nav-link @(currentController == "News"  ? "" : "collapsed")">
+                    <i class="bi bi-calendar-event"></i><span>Manage News</span>
+                </a>
+            </li><!-- End Home Nav -->
+            
+            <li class="nav-item">
+                <a asp-area="Staff" asp-controller="Category" asp-action="Index" class="nav-link @(currentController == "Category" ? "" : "collapsed")">
+                    <i class="bi bi-card-text"></i>
+                    <span>Manage Category</span>
+                </a>
+            </li><!-- End Home Nav -->
+
+            <li class="nav-item">
+                <a asp-area="Staff" asp-controller="Tag" asp-action="Index" class="nav-link @(currentController == "Tag"  ? "" : "collapsed")">
+                    <i class="bi bi-fire"></i>
+                    <span>Manage Tag</span>
+                </a>
+            </li><!-- End Notification Nav -->
+        </ul>
+    </aside>
+
+    <!-- End Sidebar-->
+    <img id="toggle-sidebar-btn" src="/assets/icons/toggle-sidebar-btn.svg" class="toggle-sidebar-btn" />
+
+    <main id="main" class="main">
+        @RenderBody()
+    </main><!-- End #main -->
+    <!-- ======= Footer ======= -->
+    <footer id="footer" class="footer">
+        <div class="w-100 text-center">
+            &copy; Copyright <strong><a class="copyright text-center" href="#">FPT Education</a></strong>
+        </div>
+
+    </footer><!-- End Footer -->
+
+    <div id="loader" class="loader-container" style="display: none;">
+        <div class="spinner-border text-primary m-auto" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/maxlength.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-bottom-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "200",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
+
+        $(function () {
+
+            var toastMessage = '@TempData["ToastMessage"]';
+            var toastType = '@TempData["ToastType"]';
+            if (toastMessage && toastType) {
+                toastr[toastType](toastMessage);
+            }
+        });
+
+    </script>
+</body>
+</html>

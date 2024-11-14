@@ -1,0 +1,439 @@
+﻿@using Client.Requests
+@using Api.Responses
+@using Client.Helpers
+@using Client.Constants
+@model PagingRequest<NewsResponse>
+@{
+    int totalRecord = (int)Model.TotalRecord;
+    int totalPages = (int)Model.TotalPages;
+    int currentPage = Model.CurrentPage;
+    int pageSize = Model.PageSize;
+
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
+
+    int startIndex = ((currentPage - 1) * pageSize) + 1;
+    int endIndex = startIndex + pageSize - 1;
+    if (endIndex > totalRecord) endIndex = totalRecord;
+
+    int ordinalNumber = 1;
+    var categories = ViewBag?.Categories;
+    var tags = ViewBag?.Tags;
+}
+
+<div class="pagetitle">
+    <h1>Manage news</h1>
+</div><!-- End Page Title -->
+
+<div class="card p-3">
+    <div class="row mb-2">
+        <form id="form-search" method="GET" asp-area="Staff" asp-controller="News" asp-action="Index">
+            <input name="IsSearch" type="hidden" value="true">
+            <div class="row">
+                <div class=" col-sm-12 col-lg-8 pe-lg-0">
+                    <div class="input-group">
+                        <input asp-for="@Model.SearchTerm" name="SearchTerm" type="text" class="form-control rounded-0 rounded-start"
+                               id="search-term" placeholder="Enter news title, content">
+                        <button type="submit" class="btn btn-info rounded-0 rounded-end">
+                            <span><i class="bi bi-search"></i> Search</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-lg-4 pt-2 pt-lg-0 text-lg-end">
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modal-create" class="btn btn-primary">
+                        <span><i class="bi bi-plus-circle-fill me-1"></i>Create</span>
+                    </button>
+                </div>
+            </div>
+            <input id="current-page" type="hidden" asp-for="CurrentPage" name="CurrentPage" />
+        </form>
+    </div>
+    @if (Model?.Items?.Count > 0)
+    {
+        <div class="table-container">
+            <table class="useful-table">
+                <thead>
+                    <tr>
+                        <th class="col-px-10">STT</th>
+                        <th>Title</th>
+                        <th>Content</th>
+                        <th>Status</th>
+                        <th>Category</th>
+                        <th>Tags</th>
+                        <th>Created By</th>
+                        <th>Created Date</th>
+                        <th>Modified Date</th>
+                        <th class="text-center col-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="useful-table-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@(ordinalNumber++)</td>
+
+                            <td title="@item.NewsTitle" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.NewsTitle
+                            </td>
+                            <td title="@(item.NewsContent.Substring(0, (item.NewsContent.Length > 150 ? 150 : item.NewsContent.Length)) + "...")" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.NewsContent
+                            </td>
+                            <td title="@item.NewsStatus" data-bs-toggle="tooltip" data-bs-placement="top">
+                                <span class="badge rounded-pill @(item.NewsStatus == true ? "bg-info" : "bg-danger")">@(item.NewsStatus == true ? "Publish" : "Hidden")</span>
+                            </td>
+                            <td title="@item.Category" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.Category
+                            </td>
+                            <td title="@item.Tags" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.Tags
+                            </td>
+                            <td title="@item.CreatedBy" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.CreatedBy
+                            </td>
+                            <td title="@item.CreatedDate" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.CreatedDate?.ToString("dd/MM/yyyy")
+                            </td>
+                            <td title="@item.ModifiedDate" data-bs-toggle="tooltip" data-bs-placement="top">
+                                @item.ModifiedDate?.ToString("dd/MM/yyyy")
+                            </td>
+                            <td class="text-center">
+                                <button onclick="fillDataToFormUpdate(@(item.NewsArticleId))" data-bs-toggle="modal" data-bs-target="#modal-update" class="btn btn-secondary me-2"><i class="bi bi-pencil"></i></button>
+                                <button onclick="fillDataToFormDelete(@(item.NewsArticleId))" data-bs-toggle="modal" data-bs-target="#modal-confirm" class="btn btn-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+        <div class="row d-flex justify-content-center align-content-center mt-3">
+
+            <div class="col">
+                <span class="fst-italic ">Show <strong>@startIndex - @endIndex</strong> in total of <strong> @totalRecord</strong> news</span>
+            </div>
+            @if (totalPages > 1)
+            {
+                <ul class="pagination justify-content-end col">
+                    <li class="page-item @((currentPage == 1) ? "disabled" : "")">
+                        <a onclick="event.preventDefault(); setCurrentPage('@(currentPage-1)')" href="#" class="page-link link-paging" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+
+                    @if (currentPage > 3)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    @for (int pageIndex = startPage; pageIndex <= endPage; pageIndex++)
+                    {
+                        <li class="page-item @(pageIndex == currentPage ? "link-active" : "")">
+                            <a onclick="event.preventDefault(); setCurrentPage('@pageIndex')" class="page-link link-paging" href="#">@pageIndex</a>
+                        </li>
+                    }
+
+                    @if (currentPage < Math.Ceiling(totalRecord / 10.0) - 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    <li class="page-item @((currentPage == totalPages) ? "disabled" : "")">
+                        <a onclick="event.preventDefault(); setCurrentPage('@(currentPage + 1)')" class="page-link link-paging" href="#">Next</a>
+                    </li>
+                </ul>
+            }
+        </div>
+    }
+    else
+    {
+        <h6 class="fw-bold">Data not found.</h6>
+    }
+
+</div>
+<form id="form-create" method="POST" asp-area="Staff" asp-controller="News" asp-action="Create" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-create" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add news</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2">
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Title<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="title-create" name="NewsTitle" type="text" class="form-control" placeholder="Enter news title">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Content<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <textarea id="content-create" name="NewsContent" type="text" class="form-control" placeholder="Enter news content"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Category<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <select onchange="onChangeEduSystem('is-submit', 'form-create')" name="CategoryID" class="selectpicker show-tick form-control">
+                                    @if (categories != null)
+                                    {
+                                        @foreach (var item in categories)
+                                        {
+                                            <option value="@item.CategoryId">@item.CategoryName</option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="">No categories available</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12  mb-3">
+                            <label class="col-sm-12 fw-bold">Status<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <div class="me-2">
+                                    <input name="NewsStatus" type="checkbox" checked value="true" class="form-check-input me-2" />  <span>Publish</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12  mb-3">
+                            <label class="col-sm-12 fw-bold">Tags<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <div class="row">
+                                    @if (tags != null)
+                                    {
+                                        @foreach (var item in tags)
+                                        {
+                                            <div class="me-2">
+                                                <input name="ListTag" type="checkbox" value="@item.TagId" class="me-2 form-check-input" /> <span>@item.TagName</span>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="">No tags available</option>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+                    <button type="button" onclick="createNews()" class="btn btn-secondary">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<form id="form-update" method="POST" asp-area="Staff" asp-controller="News" asp-action="Update" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-update" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update news</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="id-update" name="NewsArticleId" />
+                    <div class="row mb-2">
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Title<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <input id="title-update" name="NewsTitle" type="text" class="form-control" placeholder="Enter news title">
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Content<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <textarea id="content-update" name="NewsContent" type="text" class="form-control" placeholder="Enter news content"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12 mb-3">
+                            <label class="col-sm-12 fw-bold">Category<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <select id="category-update" name="CategoryID" class="selectpicker show-tick form-control">
+                                    @if (categories != null)
+                                    {
+                                        @foreach (var item in categories)
+                                        {
+                                            <option id="option-@item.CategoryId" value="@item.CategoryId">@item.CategoryName</option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="">No categories available</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12  mb-3">
+                            <label class="col-sm-12 fw-bold">Status<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <div class="me-2">
+                                    <input id="status-update" name="NewsStatus" type="checkbox" checked value="true" class="form-check-input me-2" />  <span>Publish</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-sm-12  mb-3">
+                            <label class="col-sm-12 fw-bold">Tags<span class="ms-1 text-red">*</span></label>
+                            <div class="col-sm-12">
+                                <div class="row">
+                                    @if (tags != null)
+                                    {
+                                        @foreach (var item in tags)
+                                        {
+                                            <div class="me-2">
+                                                <input name="ListTag" title="@item.TagName" type="checkbox" value="@item.TagId" class="me-2 form-check-input tags-update" /> <span>@item.TagName</span>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="">No tags available</option>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+                    <button type="button" onclick="updateNews()" class="btn btn-secondary">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<form id="form-delete" method="POST" asp-area="Staff" asp-controller="News" asp-action="Delete" enctype="multipart/form-data">
+    <div class="modal fade" id="modal-confirm" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title color-red">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <span class="fw-bold fs-5">Are you sure you want to delete the news:</span>
+                        <span class=" fs-6" id="news-delete"></span> ?
+                    </div>
+                    <input type="hidden" id="id-delete" name="id" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i>
+                        <span>No</span>
+                    </button>
+                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <span>Yes</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End Vertically centered Modal-->
+</form>
+
+<script>
+
+    const formCreate = document.getElementById('form-create');
+    const formUpdate = document.getElementById('form-update');
+    const formDelete = document.getElementById('form-delete');
+
+    function createNews() {
+        var title = document.getElementById("title-create");
+        var content = document.getElementById("content-create");
+
+        if (title.value === null || title.value.trim() === "") {
+            showToast("warning", "Please enter news title.");
+            return;
+        }
+
+        if (content.value === null || content.value.trim() === "") {
+            showToast("warning", "Please enter news content.");
+            return;
+        }
+
+        formCreate.submit();
+    }
+
+    function fillDataToFormUpdate(id) {
+        var hiddenId = document.getElementById("id-update");
+        var title = document.getElementById("title-update");
+        var content = document.getElementById("content-update");
+        var status = document.getElementById("status-update");
+        var tags = document.getElementsByClassName("tags-update");
+        var url = "GetNewsById?id=" + id;
+        const response = fetch(url)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                title.value = result.newsTitle;
+                content.value = result.newsContent;
+                hiddenId.value = result.newsArticleId;
+                var categoryId = result.categoryId;
+                document.getElementById('category-update').value = result.categoryId;
+
+                var listTag = result.tags;
+                for (var i = 0; i < tags.length; i++) {
+                    if (listTag.includes(tags[i].title)) {
+                        tags[i].checked = true;
+                    }
+                }
+
+            }).catch(error => {
+                showToast("error", error);
+            });
+    }
+
+    function fillDataToFormDelete(id) {
+        var hiddenId = document.getElementById("id-delete");
+        var title = document.getElementById("news-delete");
+        var url = "GetNewsById?id=" + id;
+        const response = fetch(url)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                title.innerHTML = result.newsTitle;
+                hiddenId.value = result.newsArticleId;
+            }).catch(error => {
+                showToast("error", error);
+            });
+    }
+
+    function updateNews() {
+        var title = document.getElementById("title-update");
+        var content = document.getElementById("content-update");
+
+        if (title.value === null || title.value.trim() === "") {
+            showToast("warning", "Please enter news title.");
+            return;
+        }
+
+        if (content.value === null || content.value.trim() === "") {
+            showToast("warning", "Please enter news content.");
+            return;
+        }
+
+        formUpdate.submit();
+    }
+</script>

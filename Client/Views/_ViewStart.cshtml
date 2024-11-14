@@ -1,0 +1,39 @@
+﻿@using Client.Services
+@using Client.Helpers
+@using Client.Constants;
+@using Client.Models;
+
+@{
+    string currentUrl = Context.Request.Path + Context.Request.QueryString;
+
+    if (currentUrl.Contains("SignIn"))
+    {
+        Layout = "~/Views/Shared/Layouts/_BlankLayout.cshtml";
+    }
+    else
+    {
+
+        var userInfo = SessionHelper.GetObject<UserInfo>(Context.Session, "UserInfo");
+
+        if (userInfo != null)
+        {
+            var role = (RoleEnum)userInfo.AccountRole;
+            switch (role)
+            {
+                case RoleEnum.Admin:
+                    Layout = "~/Views/Shared/Layouts/_AdminLayout.cshtml";
+                    break;
+                case RoleEnum.Staff:
+                    Layout = "~/Views/Shared/Layouts/_StaffLayout.cshtml";
+                    break;
+                default:
+                    Layout = "~/Views/Shared/Layouts/_Layout.cshtml";
+                    break;
+            }
+        }
+        else
+        {
+            Layout = "~/Views/Shared/Layouts/_Layout.cshtml";
+        }
+    }
+}

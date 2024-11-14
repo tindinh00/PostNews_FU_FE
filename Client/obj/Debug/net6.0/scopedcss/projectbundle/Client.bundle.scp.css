@@ -1,0 +1,9 @@
+/* _content/Client/Views/Shared/Layouts/_AdminLayout.cshtml.rz.scp.css */
+/* _content/Client/Views/Shared/Layouts/_BlankLayout.cshtml.rz.scp.css */
+body[b-d0yc9cmvrn] {
+    background-image: url('/assets/images/bg-clubs.png'); /* Replace with the path to your image */
+    background-size: cover; /* Optional: Adjust how the image fits the screen */
+    background-repeat: no-repeat; /* Optional: Prevent image from repeating */
+}
+/* _content/Client/Views/Shared/Layouts/_Layout.cshtml.rz.scp.css */
+/* _content/Client/Views/Shared/Layouts/_StaffLayout.cshtml.rz.scp.css */

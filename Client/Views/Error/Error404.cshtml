@@ -1,0 +1,16 @@
+﻿﻿@using Client.Helpers
+﻿@using Client.Models
+﻿@using Client.Constants
+@{
+    var userInfo = SessionHelper.GetObject<UserInfo>(Context.Session, "UserInfo");
+}
+
+<section class="error-404 min-vh-100 d-flex flex-column align-items-center justify-content-start my-5 ">
+    <img src="/assets/images/errors/404.svg" width="300" height="300" class="img-fluid py-4" alt="Page Not Found">
+    <h2 class="text-center">The page you are looking for doesn't exist.</h2>
+    <a class="btn btn-secondary" asp-area="@(userInfo?.AccountRole == (int) RoleEnum.Staff ? "Staff" : "Admin")" asp-controller="Home" asp-action="Index">
+
+        <i class="bi bi-arrow-return-left"></i>
+        <span>Home</span>
+    </a>
+</section>
